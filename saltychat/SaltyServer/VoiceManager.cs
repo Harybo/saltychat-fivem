@@ -252,7 +252,7 @@ namespace SaltyServer
 
             if (!this.IsVersionAccepted(version))
             {
-                player.Drop($"[Salty Chat] Required Version: {this.MinimumPluginVersion}");
+                player.Drop($"[Salty Chat] Version du plugin requis : {this.MinimumPluginVersion}");
                 return;
             }
         }

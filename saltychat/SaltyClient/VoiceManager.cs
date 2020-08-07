@@ -15,21 +15,19 @@ namespace SaltyClient
         public bool IsEnabled { get; private set; }
         public bool IsConnected { get; private set; }
         public bool IsIngame { get; private set; }
-        public bool IsNuiReady { get; private set; }
 
         public string TeamSpeakName { get; private set; }
         public string ServerUniqueIdentifier { get; private set; }
         public string SoundPack { get; private set; }
         public ulong IngameChannel { get; private set; }
         public string IngameChannelPassword { get; private set; }
-        public ulong[] SwissChannelIds { get; private set; } = new ulong[0];
+        public ulong[] SwissChannelIds { get; private set; }
 
         public VoiceClient[] VoiceClients => this._voiceClients.Values.ToArray();
         private Dictionary<int, VoiceClient> _voiceClients = new Dictionary<int, VoiceClient>();
 
         public Vector3[] RadioTowers { get; private set; }
 
-        public string WebSocketAddress { get; private set; } = "lh.saltmine.de:38088";
         public float VoiceRange { get; private set; } = SharedData.VoiceRanges[1];
         public string PrimaryRadioChannel { get; private set; }
         public string SecondaryRadioChannel { get; private set; }
@@ -54,7 +52,6 @@ namespace SaltyClient
             API.RegisterNuiCallbackType(NuiEvent.SaltyChat_OnDisconnected);
             API.RegisterNuiCallbackType(NuiEvent.SaltyChat_OnError);
             API.RegisterNuiCallbackType(NuiEvent.SaltyChat_OnMessage);
-            API.RegisterNuiCallbackType(NuiEvent.SaltyChat_OnNuiReady);
 
             GetRadioChannelDelegate getRadioChannelDelegate = new GetRadioChannelDelegate(this.GetRadioChannel);
             this.Exports.Add("GetRadioChannel", getRadioChannelDelegate);
@@ -65,6 +62,18 @@ namespace SaltyClient
         #endregion
 
         #region Events
+        [EventHandler("onClientResourceStart")]
+        private void OnResourceStart(string resourceName)
+        {
+            if (resourceName != API.GetCurrentResourceName())
+                return;
+
+            API.RegisterCommand("voix_distance", new Action<int, List<object>, string>((source, args, raw) =>
+            {
+                this.ToggleVoiceRange();
+            }), false);
+        }
+
         [EventHandler("onClientResourceStop")]
         private void OnResourceStop(string resourceName)
         {
@@ -103,10 +112,8 @@ namespace SaltyClient
 
             if (this.IsConnected)
                 this.InitializePlugin();
-            else if (this.IsNuiReady)
-                this.ExecuteCommand("connect", this.WebSocketAddress);
             else
-                Debug.WriteLine("[Salty Chat] Got server response, but NUI wasn't ready");
+                this.ExecuteCommand("connect", "lh.saltmine.de:38088");
 
             //VoiceManager.DisplayDebug(true);
         }
@@ -492,21 +499,6 @@ namespace SaltyClient
         #endregion
 
         #region NUI Events
-        [EventHandler("__cfx_nui:" + NuiEvent.SaltyChat_OnNuiReady)]
-        private void OnNuiReady(dynamic dummy, dynamic cb)
-        {
-            this.IsNuiReady = true;
-
-            if (this.IsEnabled && this.TeamSpeakName != null && !this.IsConnected)
-            {
-                Debug.WriteLine("[Salty Chat] NUI is now ready, connecting...");
-
-                this.ExecuteCommand("connect", this.WebSocketAddress);
-            }
-
-            cb("");
-        }
-
         [EventHandler("__cfx_nui:" + NuiEvent.SaltyChat_OnConnected)]
         private void OnConnected(dynamic dummy, dynamic cb)
         {
@@ -522,6 +514,8 @@ namespace SaltyClient
         private void OnDisconnected(dynamic dummy, dynamic cb)
         {
             this.IsConnected = false;
+
+            CitizenFX.Core.UI.Screen.ShowNotification($"❌ Ton TeamSpeak est fermé");
 
             cb("");
         }
@@ -685,19 +679,19 @@ namespace SaltyClient
         [Tick]
         private async Task OnControlTick()
         {
-            Game.DisableControlThisFrame(0, Control.EnterCheatCode);
-            Game.DisableControlThisFrame(0, Control.PushToTalk);
-            Game.DisableControlThisFrame(0, Control.VehiclePushbikeSprint);
-            Game.DisableControlThisFrame(0, Control.SpecialAbilitySecondary);
+            //Game.DisableControlThisFrame(0, Control.EnterCheatCode);
+            //Game.DisableControlThisFrame(0, Control.PushToTalk);
+            //Game.DisableControlThisFrame(0, Control.VehiclePushbikeSprint);
+            //Game.DisableControlThisFrame(0, Control.SpecialAbilitySecondary);
 
             if (Game.Player.IsAlive)
             {
                 Ped playerPed = Game.PlayerPed;
 
-                if (Game.IsControlJustPressed(0, Control.EnterCheatCode))
-                {
-                    this.ToggleVoiceRange();
-                }
+                //if (Game.IsControlJustPressed(0, Control.EnterCheatCode))
+                //{
+                //    this.ToggleVoiceRange();
+                //}
 
                 if (playerPed.IsInPoliceVehicle)
                 {
@@ -725,10 +719,16 @@ namespace SaltyClient
 
                 if (this.PrimaryRadioChannel != null)
                 {
-                    if (Game.IsControlJustPressed(0, Control.PushToTalk))
+                    if (Game.IsControlJustPressed(0, Control.Detonate))
+                    {
                         BaseScript.TriggerServerEvent(Event.SaltyChat_IsSending, this.PrimaryRadioChannel, true);
-                    else if (Game.IsControlJustReleased(0, Control.PushToTalk))
+                        BaseScript.TriggerEvent("Radio.Anim", true);
+                    }
+                    else if (Game.IsControlJustReleased(0, Control.Detonate))
+                    {
                         BaseScript.TriggerServerEvent(Event.SaltyChat_IsSending, this.PrimaryRadioChannel, false);
+                        BaseScript.TriggerEvent("Radio.Anim", false);
+                    }
                 }
 
                 if (this.SecondaryRadioChannel != null)
@@ -890,7 +890,8 @@ namespace SaltyClient
 
             BaseScript.TriggerServerEvent(Event.SaltyChat_SetVoiceRange, this.VoiceRange);
 
-            CitizenFX.Core.UI.Screen.ShowNotification($"New voice range is {this.VoiceRange} metres.");
+            CitizenFX.Core.UI.Screen.ShowNotification($"Vous parlez à {this.VoiceRange} mètres.");
+            BaseScript.TriggerEvent("update:vocalmode", this.VoiceRange);
         }
         #endregion
 
