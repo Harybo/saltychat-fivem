@@ -30,10 +30,10 @@ exports {
 }
 
 VoiceEnabled 'true'
-ServerUniqueIdentifier 'NMjxHW5psWaLNmFh0+kjnQik7Qc='
+ServerUniqueIdentifier 'bvkfX3w392zT2ynfeu3jZZIX8mo='
 RequiredUpdateBranch ''
-MinimumPluginVersion ''
+MinimumPluginVersion '2.0.0'
 SoundPack 'default'
-IngameChannelId '25'
-IngameChannelPassword '5V88FWWME615'
-SwissChannelIds '61,62'
+IngameChannelId '7'
+IngameChannelPassword 'nebulastartitsbest'
+SwissChannelIds '13,14,33'

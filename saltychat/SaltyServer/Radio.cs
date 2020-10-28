@@ -101,7 +101,18 @@ namespace SaltyServer
             RadioChannelMember[] channelMembers = this.Members;
             RadioChannelMember[] onSpeaker = channelMembers.Where(m => m.VoiceClient.RadioSpeaker && m.VoiceClient != voiceClient).ToArray();
 
-            string positionJson = JsonConvert.SerializeObject(voiceClient.Player.Character.Position);
+            CitizenFX.Core.Ped ped = voiceClient.Player.Character;
+			string positionJson;
+
+			if (ped != null)
+			{
+			    positionJson = JsonConvert.SerializeObject(ped.Position);
+            }
+			else
+			{
+				CitizenFX.Core.Debug.WriteLine($"Player {voiceClient.Player.Name} ({voiceClient.Player.Handle}) has no Ped, using 0,0,0 as position.");
+				positionJson = JsonConvert.SerializeObject(new CitizenFX.Core.Vector3());
+			}
 
             if (onSpeaker.Length > 0)
             {
