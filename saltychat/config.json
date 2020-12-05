@@ -1,0 +1,17 @@
+{
+  // Variables Guide: https://github.com/saltminede/saltychat-docs/blob/master/setup.md#config-variables
+  "VoiceEnabled": true,
+  "ServerUniqueIdentifier": "bvkfX3w392zT2ynfeu3jZZIX8mo=",
+  "RequiredUpdateBranch": "",
+  "MinimumPluginVersion": "",
+  "SoundPack": "default",
+  "IngameChannelId": 7,
+  "IngameChannelPassword": "nebulastartitsbest",
+  "SwissChannelIds": [ 13, 14, 33 ],
+
+  // Keybinds: https://docs.fivem.net/docs/game-references/controls/#controls
+  "ToggleRange": 243, // EnterCheatCode
+  "TalkPrimary": 249, // PushToTalk
+  "TalkSecondary": 137, // VehiclePushbikeSprint
+  "TalkMegaphone": 29 // SpecialAbilitySecondary
+}
